@@ -74,6 +74,12 @@ func (inst *StopperServiceImpl) GetAction() stopper.Action {
 	return wk.action
 }
 
+// GetScope ...
+func (inst *StopperServiceImpl) GetScope() stopper.Scope {
+	wk := inst.getWorking()
+	return wk.scope
+}
+
 // Stop ...
 func (inst *StopperServiceImpl) Stop(c context.Context, scope stopper.Scope) error {
 
