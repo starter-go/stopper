@@ -9,7 +9,7 @@ import (
 const (
 	theModuleName     = "github.com/starter-go/stopper"
 	theModuleVersion  = "v0.0.1"
-	theModuleRevision = 1
+	theModuleRevision = 2
 )
 
 ////////////////////////////////////////////////////////////////////////////////
