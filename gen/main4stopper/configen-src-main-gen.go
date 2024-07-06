@@ -40,8 +40,6 @@ func (inst* p9380065345_lib_StopperServiceImpl) inject(injext application.Inject
     com.AppContext = inst.getAppContext(ie)
     com.FS = inst.getFS(ie)
     com.Enabled = inst.getEnabled(ie)
-    com.FlagScope = inst.getFlagScope(ie)
-    com.FlagAction = inst.getFlagAction(ie)
 
 
     return nil
@@ -60,16 +58,6 @@ func (inst*p9380065345_lib_StopperServiceImpl) getFS(ie application.InjectionExt
 
 func (inst*p9380065345_lib_StopperServiceImpl) getEnabled(ie application.InjectionExt)bool{
     return ie.GetBool("${starter.stopper.enabled}")
-}
-
-
-func (inst*p9380065345_lib_StopperServiceImpl) getFlagScope(ie application.InjectionExt)string{
-    return ie.GetString("${starter.stopper.scope}")
-}
-
-
-func (inst*p9380065345_lib_StopperServiceImpl) getFlagAction(ie application.InjectionExt)string{
-    return ie.GetString("${starter.stopper.action}")
 }
 
 

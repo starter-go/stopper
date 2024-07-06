@@ -20,9 +20,7 @@ type StopperServiceImpl struct {
 	AppContext application.Context //starter:inject("context")
 	FS         afs.FS              //starter:inject("#")
 
-	Enabled    bool   //starter:inject("${starter.stopper.enabled}")
-	FlagScope  string //starter:inject("${starter.stopper.scope}")
-	FlagAction string //starter:inject("${starter.stopper.action}")
+	Enabled bool //starter:inject("${starter.stopper.enabled}")
 
 	working *myWorking // 需要执行的任务
 }
@@ -55,6 +53,7 @@ func (inst *StopperServiceImpl) Life() *application.Life {
 
 		if wk.action == stopper.ActionRestart {
 			wk.stopAllOthers()
+			time.Sleep(time.Second * 5)
 			x := &myStarter{service: inst}
 			return x.life()
 		}
@@ -68,17 +67,17 @@ func (inst *StopperServiceImpl) Life() *application.Life {
 	return &application.Life{}
 }
 
-// GetAction ...
-func (inst *StopperServiceImpl) GetAction() stopper.Action {
-	wk := inst.getWorking()
-	return wk.action
-}
+// // GetAction ...
+// func (inst *StopperServiceImpl) GetAction() stopper.Action {
+// 	wk := inst.getWorking()
+// 	return wk.action
+// }
 
-// GetScope ...
-func (inst *StopperServiceImpl) GetScope() stopper.Scope {
-	wk := inst.getWorking()
-	return wk.scope
-}
+// // GetScope ...
+// func (inst *StopperServiceImpl) GetScope() stopper.Scope {
+// 	wk := inst.getWorking()
+// 	return wk.scope
+// }
 
 // Stop ...
 func (inst *StopperServiceImpl) Stop(c context.Context, scope stopper.Scope) error {
@@ -121,10 +120,6 @@ func (inst *StopperServiceImpl) Stop(c context.Context, scope stopper.Scope) err
 ////////////////////////////////////////////////////////////////////////////////
 
 type myWorking struct {
-
-	// modeStopping bool           // 表示正在停止
-	// modeStarting bool           // 表示正在启动
-
 	scope  stopper.Scope  // 请求的作用域
 	action stopper.Action // 请求的 动作
 	sfile  *stopperFile   // 本进程的停止控制文件
@@ -136,8 +131,9 @@ func (inst *myWorking) init(service *StopperServiceImpl) {
 		return
 	}
 
-	inst.parseScope(service.FlagScope)
-	inst.parseAction(service.FlagAction)
+	ac := service.AppContext
+	inst.action = stopper.GetAction(ac)
+	inst.scope = stopper.GetScope(ac)
 
 	ctx := &stopperContext{
 		ac: service.AppContext,
@@ -174,7 +170,6 @@ func (inst *myWorking) stopAllOthers() {
 		}
 		item.remove()
 	}
-	time.Sleep(time.Second * 3)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -185,10 +180,11 @@ type myStarter struct {
 
 func (inst *myStarter) life() *application.Life {
 	return &application.Life{
-		OnCreate: inst.onInit,
-		OnStart:  inst.onStart,
-		OnStop:   inst.onStop,
-		OnLoop:   inst.onLoop,
+		OnCreate:   inst.onInit,
+		OnStart:    inst.onStart,
+		OnStop:     inst.onStop,
+		OnLoop:     inst.onLoop,
+		OnStopPost: inst.onStopped,
 	}
 }
 
@@ -218,7 +214,7 @@ func (inst *myStarter) onLoop() error {
 		}
 		time.Sleep(time.Second * 2)
 	}
-	vlog.Info("StopperServiceImpl: stopping ...")
+	vlog.Info("stopping ...")
 	return nil
 }
 
@@ -229,6 +225,11 @@ func (inst *myStarter) onStop() error {
 		err := sfile.remove()
 		vlog.Warn(err.Error())
 	}
+	return nil
+}
+
+func (inst *myStarter) onStopped() error {
+	vlog.Info("stopped")
 	return nil
 }
 

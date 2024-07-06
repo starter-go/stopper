@@ -3,6 +3,8 @@ package stopper
 import (
 	"fmt"
 	"strings"
+
+	"github.com/starter-go/application"
 )
 
 // Scope 表示 stop 的作用域
@@ -35,4 +37,15 @@ func ParseScope(text string) (Scope, error) {
 	default:
 		return ScopeNone, fmt.Errorf("bad scope name: '%s'", text)
 	}
+}
+
+// GetScope  从上下文中取操作作用域
+func GetScope(ac application.Context) Scope {
+	const (
+		name = "starter.stopper.scope"
+	)
+	props := ac.GetProperties()
+	value := props.GetProperty(name)
+	scope, _ := ParseScope(value)
+	return scope
 }
