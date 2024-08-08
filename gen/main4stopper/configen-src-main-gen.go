@@ -40,6 +40,7 @@ func (inst* p9380065345_lib_StopperServiceImpl) inject(injext application.Inject
     com.AppContext = inst.getAppContext(ie)
     com.FS = inst.getFS(ie)
     com.Enabled = inst.getEnabled(ie)
+    com.ControlFile = inst.getControlFile(ie)
 
 
     return nil
@@ -58,6 +59,11 @@ func (inst*p9380065345_lib_StopperServiceImpl) getFS(ie application.InjectionExt
 
 func (inst*p9380065345_lib_StopperServiceImpl) getEnabled(ie application.InjectionExt)bool{
     return ie.GetBool("${starter.stopper.enabled}")
+}
+
+
+func (inst*p9380065345_lib_StopperServiceImpl) getControlFile(ie application.InjectionExt)string{
+    return ie.GetString("${starter.stopper.control.file}")
 }
 
 

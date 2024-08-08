@@ -2,10 +2,12 @@ package lib
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/starter-go/afs"
 	"github.com/starter-go/application"
+	"github.com/starter-go/base/lang"
 	"github.com/starter-go/stopper"
 	"github.com/starter-go/vlog"
 )
@@ -20,7 +22,8 @@ type StopperServiceImpl struct {
 	AppContext application.Context //starter:inject("context")
 	FS         afs.FS              //starter:inject("#")
 
-	Enabled bool //starter:inject("${starter.stopper.enabled}")
+	Enabled     bool   //starter:inject("${starter.stopper.enabled}")
+	ControlFile string //starter:inject("${starter.stopper.control.file}")
 
 	working *myWorking // 需要执行的任务
 }
@@ -66,18 +69,6 @@ func (inst *StopperServiceImpl) Life() *application.Life {
 
 	return &application.Life{}
 }
-
-// // GetAction ...
-// func (inst *StopperServiceImpl) GetAction() stopper.Action {
-// 	wk := inst.getWorking()
-// 	return wk.action
-// }
-
-// // GetScope ...
-// func (inst *StopperServiceImpl) GetScope() stopper.Scope {
-// 	wk := inst.getWorking()
-// 	return wk.scope
-// }
 
 // Stop ...
 func (inst *StopperServiceImpl) Stop(c context.Context, scope stopper.Scope) error {
@@ -134,14 +125,54 @@ func (inst *myWorking) init(service *StopperServiceImpl) {
 	ac := service.AppContext
 	inst.action = stopper.GetAction(ac)
 	inst.scope = stopper.GetScope(ac)
+	inst.sfile = inst.locateStopperFile(service)
+}
 
+func (inst *myWorking) locateStopperFile(service *StopperServiceImpl) *stopperFile {
+	const (
+		prefix = "{{"
+		suffix = "}}"
+	)
+	auto := false
+	path := strings.TrimSpace(service.ControlFile)
+	if strings.HasPrefix(path, prefix) && strings.HasSuffix(path, suffix) {
+		str := path[len(prefix) : len(path)-len(suffix)]
+		str = strings.TrimSpace(str)
+		str = strings.ToLower(str)
+		if str == "auto" {
+			auto = true
+		}
+	}
+	if auto {
+		return inst.locateStopperFileByAuto(service)
+	}
+	return inst.locateStopperFileByPath(service, path)
+}
+
+func (inst *myWorking) locateStopperFileByPath(service *StopperServiceImpl, path string) *stopperFile {
+	now := lang.Now()
+	ctx := &stopperContext{
+		ac: service.AppContext,
+		fs: service.FS,
+	}
+	file := ctx.fs.NewPath(path)
+	man := getStopperFileManager(ctx)
+	sfile := &stopperFile{
+		timestamp: now,
+		manager:   man,
+		file:      file,
+	}
+	return sfile
+}
+
+func (inst *myWorking) locateStopperFileByAuto(service *StopperServiceImpl) *stopperFile {
 	ctx := &stopperContext{
 		ac: service.AppContext,
 		fs: service.FS,
 	}
 	man := getStopperFileManager(ctx)
 	sfile := man.new()
-	inst.sfile = sfile
+	return sfile
 }
 
 func (inst *myWorking) parseScope(text string) {

@@ -2,6 +2,7 @@ package stopper
 
 import (
 	"github.com/starter-go/application"
+	"github.com/starter-go/libafs/modules/libafs"
 	"github.com/starter-go/starter"
 	"github.com/starter-go/stopper"
 	"github.com/starter-go/stopper/gen/main4stopper"
@@ -21,5 +22,6 @@ func ModuleForTest() application.Module {
 	mb := stopper.NewTestModule()
 	mb.Components(test4stopper.ExportComponents)
 	mb.Depend(Module())
+	mb.Depend(libafs.Module())
 	return mb.Create()
 }
