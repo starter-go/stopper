@@ -1,6 +1,10 @@
 package unit
 
-import "github.com/starter-go/units"
+import (
+	"context"
+
+	"github.com/starter-go/units"
+)
 
 // DemoUnit ... 单元测试示例
 type DemoUnit struct {
@@ -27,6 +31,6 @@ func (inst *DemoUnit) ListRegistrations(list []*units.Registration) []*units.Reg
 }
 
 // Units ...
-func (inst *DemoUnit) test1() error {
+func (inst *DemoUnit) test1(cc context.Context) error {
 	return nil
 }
