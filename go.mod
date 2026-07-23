@@ -8,13 +8,14 @@ require (
 	github.com/starter-go/afs v0.10.0
 	github.com/starter-go/application v0.10.0
 	github.com/starter-go/base v0.10.0
+	github.com/starter-go/configen v0.10.0 // indirect
+	github.com/starter-go/libafs v0.10.0 // direct
 	github.com/starter-go/starter v0.10.0
 	github.com/starter-go/units v0.10.0
 	github.com/starter-go/vlog v0.10.0
-	github.com/starter-go/configen v0.10.0 // indirect
-	github.com/starter-go/libafs v0.10.0 // direct
 )
 
 require (
+	github.com/starter-go/v0/libvlog v0.10.1
 	golang.org/x/sys v0.22.0 // indirect
 )

@@ -16,6 +16,7 @@ const (
 	ActionStart   Action = "start"
 	ActionStop    Action = "stop"
 	ActionRestart Action = "restart"
+	ActionAuto    Action = "auto"
 )
 
 // ParseAction ...
@@ -24,14 +25,18 @@ func ParseAction(text string) (Action, error) {
 	text = strings.ToLower(text)
 	a1 := Action(text)
 	switch a1 {
+
 	case ActionStart:
 		return a1, nil
 	case ActionStop:
 		return a1, nil
 	case ActionRestart:
 		return a1, nil
+	case ActionAuto:
+		return a1, nil
 	case ActionNone:
 		return a1, nil
+
 	default:
 		return ActionNone, fmt.Errorf("bad action name: '%s'", text)
 	}

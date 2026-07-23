@@ -2,7 +2,9 @@ package lib
 
 import (
 	"context"
+	"os/signal"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/starter-go/afs"
@@ -65,6 +67,12 @@ func (inst *StopperServiceImpl) Life() *application.Life {
 			x := &myStopper{service: inst}
 			return x.life()
 		}
+
+		if wk.action == stopper.ActionAuto {
+			x := &mySimpleStopper{service: inst}
+			return x.life()
+		}
+
 	}
 
 	return &application.Life{}
@@ -81,18 +89,21 @@ func (inst *StopperServiceImpl) Stop(c context.Context, scope stopper.Scope) err
 	switch scope {
 	case stopper.ScopeThis:
 		todolist = append(todolist, sfile)
-		break
+		// break
+
 	case stopper.ScopeOlder:
 		older := man.getOlder()
 		todolist = append(todolist, older)
-		break
+		// break
+
 	case stopper.ScopeNewer:
 		newer := man.getNewer()
 		todolist = append(todolist, newer)
-		break
+		// break
+
 	case stopper.ScopeAll:
 		todolist = man.listAll()
-		break
+		// break
 	}
 
 	for _, item := range todolist {
@@ -285,6 +296,90 @@ func (inst *myStopper) doShutdown() error {
 	scope := wk.scope
 	ctx := context.Background()
 	return inst.service.Stop(ctx, scope)
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+type mySimpleStopper struct {
+	service  *StopperServiceImpl
+	stopping bool
+}
+
+func (inst *mySimpleStopper) life() *application.Life {
+	return &application.Life{
+		Order: 999999,
+
+		OnCreate:  inst.onCreate,
+		OnStart:   inst.onStart,
+		OnLoop:    inst.run2,
+		OnStop:    inst.onStop,
+		OnDestroy: inst.onDestroy,
+	}
+}
+
+func (inst *mySimpleStopper) onCreate() error {
+	inst.log("creating ...")
+	return nil
+}
+
+func (inst *mySimpleStopper) onDestroy() error {
+	inst.log("destroying ...")
+	return nil
+}
+
+func (inst *mySimpleStopper) onStart() error {
+	inst.log("starting ...")
+	return nil
+}
+
+func (inst *mySimpleStopper) onStop() error {
+	inst.log("stopping ...")
+	return nil
+}
+
+func (inst *mySimpleStopper) run() error {
+
+	inst.log("wait for stopping ...")
+
+	const step = time.Second
+	for {
+		if inst.stopping {
+			break
+		}
+		time.Sleep(step)
+	}
+	return nil
+}
+
+func (inst *mySimpleStopper) run2() error {
+
+	inst.log("wait for stopping ...")
+
+	// 创建上下文用于监听信号
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+
+	// 定义一个goroutine模拟清理工作
+	go func() {
+
+		<-ctx.Done()
+		// fmt.Println("开始清理工作...")
+		time.Sleep(2 * time.Second) // 模拟清理过程
+		// fmt.Println("清理完成，准备退出。")
+	}()
+
+	// fmt.Println("程序正在运行，按Ctrl+C或发送SIGTERM信号退出。")
+
+	// 主goroutine等待信号
+	<-ctx.Done()
+
+	// fmt.Println("接收到信号，即将退出。")
+
+	return nil
+}
+
+func (inst *mySimpleStopper) log(str string) {
+	vlog.Info("stopper(auto): %s", str)
 }
 
 ////////////////////////////////////////////////////////////////////////////////

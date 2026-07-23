@@ -150,20 +150,33 @@ type stopperFile struct {
 }
 
 func (inst *stopperFile) create() error {
+
 	file := inst.file
+	content := "" // 内容必须为空
+
 	if file.Exists() {
 		return nil
 	}
 
-	dir := file.GetParent()
-	if !dir.Exists() {
-		opt := afs.ToMakeDir()
-		dir.Mkdirs(opt)
-	}
+	om := new(afs.OptionsMaker)
+	om.Create().WriteOnly()
+	om.SetMode(6, 4, 4)
+	opt := om.Options()
 
-	content := "" // 内容必须为空
-	opt := afs.Todo().Create(true).Write(true).Options()
-	return file.GetIO().WriteText(content, opt)
+	inst.mkdir4file(file)
+
+	return file.GetIO().WriteText(content, &opt)
+}
+
+func (inst *stopperFile) mkdir4file(file afs.Path) error {
+	dir := file.GetParent()
+	if dir.Exists() {
+		return nil
+	}
+	om := new(afs.OptionsMaker)
+	om.SetMode(7, 5, 5)
+	opt := om.Options()
+	return dir.Mkdirs(&opt)
 }
 
 func (inst *stopperFile) remove() error {
